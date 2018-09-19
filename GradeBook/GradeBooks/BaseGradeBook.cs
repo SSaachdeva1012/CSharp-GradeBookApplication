@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static GradeBook.Enums.StudentType;
 
 namespace GradeBook.GradeBooks
 {
@@ -14,11 +15,14 @@ namespace GradeBook.GradeBooks
         public string Name { get; set; }
         public List<Student> Students { get; set; }
         public GradeBookType Type { get; set; }
+        
+        public bool IsWeighted { get; set; }
 
-        protected  BaseGradeBook(string name)
+        protected  BaseGradeBook(string name, bool isWeighted)
         {
             Name = name;
             Students = new List<Student>();
+            IsWeighted = isWeighted;
         }
 
         public void AddStudent(Student student)
@@ -107,18 +111,28 @@ namespace GradeBook.GradeBooks
 
         public virtual double GetGPA(char letterGrade, StudentType studentType)
         {
+            int gpa = 0;
             switch (letterGrade)
             {
                 case 'A':
-                    return 4;
+                    gpa =  4;
+                    break;
                 case 'B':
-                    return 3;
+                    gpa = 3;
+                    break;
                 case 'C':
-                    return 2;
+                    gpa = 2;
+                    break;
                 case 'D':
-                    return 1;
+                    gpa =  1;
+                    break;
             }
-            return 0;
+
+            if (IsWeighted && studentType == Honors || IsWeighted && studentType == DualEnrolled)
+            {
+                return gpa + 1;
+            }
+            return gpa;
         }
 
         public virtual void CalculateStatistics()
@@ -158,13 +172,13 @@ namespace GradeBook.GradeBooks
 
                 switch (student.Type)
                 {
-                    case StudentType.Standard:
+                    case Standard:
                         standardPoints += student.AverageGrade;
                         break;
-                    case StudentType.Honors:
+                    case Honors:
                         honorPoints += student.AverageGrade;
                         break;
-                    case StudentType.DualEnrolled:
+                    case DualEnrolled:
                         dualEnrolledPoints += student.AverageGrade;
                         break;
                 }
@@ -181,11 +195,11 @@ namespace GradeBook.GradeBooks
             if (internationalPoints != 0)
                 Console.WriteLine("Average for only international students is " + (internationalPoints / Students.Where(e => e.Enrollment == EnrollmentType.International).Count()));
             if (standardPoints != 0)
-                Console.WriteLine("Average for students excluding honors and duel enrollment is " + (standardPoints / Students.Where(e => e.Type == StudentType.Standard).Count()));
+                Console.WriteLine("Average for students excluding honors and duel enrollment is " + (standardPoints / Students.Where(e => e.Type == Standard).Count()));
             if (honorPoints != 0)
-                Console.WriteLine("Average for only honors students is " + (honorPoints / Students.Where(e => e.Type == StudentType.Honors).Count()));
+                Console.WriteLine("Average for only honors students is " + (honorPoints / Students.Where(e => e.Type == Honors).Count()));
             if (dualEnrolledPoints != 0)
-                Console.WriteLine("Average for only duel enrolled students is " + (dualEnrolledPoints / Students.Where(e => e.Type == StudentType.DualEnrolled).Count()));
+                Console.WriteLine("Average for only duel enrolled students is " + (dualEnrolledPoints / Students.Where(e => e.Type == DualEnrolled).Count()));
         }
 
         public virtual void CalculateStudentStatistics(string name)
